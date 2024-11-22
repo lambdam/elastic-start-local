@@ -40,8 +40,9 @@ startup() {
   # Version
   version="0.5.1"
 
+  license_type="basic"
   # Folder name for the installation
-  installation_folder="elastic-start-local"
+  installation_folder="../elastic-start-local-$license_type"
   # API key name for Elasticsearch
   api_key_name="elastic-start-local"
   # Name of the error log
@@ -49,9 +50,10 @@ startup() {
   # Minimum version for docker-compose
   min_docker_compose="1.29.0"
   # Elasticsearch container name
-  elasticsearch_container_name="es-local-dev"
+  elasticsearch_container_name="es-local-dev-$license_type"
   # Kibana container name
-  kibana_container_name="kibana-local-dev"
+  kibana_container_name="kibana-local-dev-$license_type"
+  kibana_settings_container_name="kibana-settings-local-dev-$license_type"
   # Minimum disk space required for docker images + services (in GB)
   min_disk_space_required=5
 }
@@ -326,7 +328,7 @@ check_docker_services() {
   # Check for docker containers running
   check_container_running "$elasticsearch_container_name"
   check_container_running "$kibana_container_name"
-  check_container_running "kibana_settings"
+  check_container_running "$kibana_settings_container_name"
 }
 
 create_installation_folder() {
@@ -358,6 +360,7 @@ ES_LOCAL_HEAP_INIT=128m
 ES_LOCAL_HEAP_MAX=2g
 ES_LOCAL_DISK_SPACE_REQUIRED=1gb
 KIBANA_LOCAL_CONTAINER_NAME=$kibana_container_name
+KIBANA_SETTINGS_LOCAL_CONTAINER_NAME=$kibana_settings_container_name
 KIBANA_LOCAL_PORT=5601
 KIBANA_LOCAL_PASSWORD=$kibana_password
 KIBANA_ENCRYPTION_KEY=$kibana_encryption_key
@@ -535,7 +538,7 @@ services:
       - ELASTIC_PASSWORD=${ES_LOCAL_PASSWORD}
       - xpack.security.enabled=true
       - xpack.security.http.ssl.enabled=false
-      - xpack.license.self_generated.type=trial
+      - xpack.license.self_generated.type=basic
       - xpack.ml.use_auto_machine_memory_percent=true
       - ES_JAVA_OPTS=-Xms${ES_LOCAL_HEAP_INIT} -Xmx${ES_LOCAL_HEAP_MAX}
       - cluster.routing.allocation.disk.watermark.low=${ES_LOCAL_DISK_SPACE_REQUIRED}
@@ -570,7 +573,7 @@ EOM
       elasticsearch:
         condition: service_healthy
     image: docker.elastic.co/elasticsearch/elasticsearch:${ES_LOCAL_VERSION}
-    container_name: kibana_settings
+    container_name: ${KIBANA_SETTINGS_LOCAL_CONTAINER_NAME}
     restart: 'no'
     command: >
       bash -c '
